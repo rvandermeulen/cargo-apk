@@ -14,26 +14,20 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Install aarch64-linux-android Rust target
-        run: rustup target add aarch64-linux-android
       - name: Clippy
-        # Use one of our supported targets to lint all crates including
-        # the target-specific `ndk` in one go.
-        # This assumes our host-tools (cargo-apk and dependencies)
-        # also compile cleanly under this target.
-        run: cargo clippy --all --all-targets --all-features --target aarch64-linux-android -- -Dwarnings
+        run: cargo clippy --workspace --all-targets --all-features --exclude ndk-examples -- -Dwarnings
 
-  check_msrv:
-    name: Check MSRV (1.70.0)
+  rust-msrv:
+    name: Build-test MSRV (1.70) with minimal crate dependencies
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - name: Generate minimal-version dependencies
+        run: cargo -Zminimal-versions generate-lockfile
       - uses: dtolnay/rust-toolchain@1.70.0
-        with:
-          target: aarch64-linux-android
-      - name: Check
-        # See comment above about using one of our supported targets.
-        run: cargo check --workspace --all-targets --all-features --target aarch64-linux-android
+      - name: Cargo check
+        run: cargo check --workspace --all-targets --all-features --exclude ndk-examples
 
   build:
     strategy:
