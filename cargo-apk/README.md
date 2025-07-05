@@ -1,4 +1,4 @@
-# cargo apk
+# Create Android packages (APKs) from native Rust crates
 
 [![Actions Status](https://github.com/rust-mobile/cargo-apk/actions/workflows/rust.yml/badge.svg)](https://github.com/rust-mobile/cargo-apk/actions)
 [![Latest version](https://img.shields.io/crates/v/cargo-apk.svg?logo=rust)](https://crates.io/crates/cargo-apk)
@@ -8,10 +8,10 @@
 ![MIT](https://img.shields.io/badge/License-MIT-green.svg)
 ![Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-green.svg)
 
-> [!CAUTION]
-> This tool is deprecated in favour of [`xbuild`](https://github.com/rust-mobile/xbuild).
+Tool for creating Android packages from native Rust crates, requiring minimal setup and tooling.  Ideal for apps that provide a [`NativeActivity`] via our [`ndk` crate].
 
-Tool for creating Android packages.
+[`NativeActivity`]: https://developer.android.com/reference/android/app/NativeActivity
+[`ndk` crate]: https://crates.io/crates/ndk
 
 ## Installation
 
@@ -21,22 +21,47 @@ From crates.io:
 $ cargo install cargo-apk
 ```
 
-From source:
+From locally downloaded or cloned source:
 
 ```console
 $ cargo install --path cargo-apk/
 ```
 
+## Crate configuration
+
+Android and thus `cargo-apk` require the [Cargo Target] to be a Shared Library, corresponding to Rust's `cdylib` `crate-type`.  For the sole library in a crate, configure this as follows in `Cargo.toml`:
+
+```toml
+[lib]
+# Optionally supports a different library location using `path = "..."`
+crate-type = ["cdylib"]
+```
+
+Example targets must be identified by their `name` or `path` in the list of `example`s:
+
+```toml
+[[example]]
+name = "example_name" # Matching the filename in `examples/example_name.rs`, unless specified otherwise with `path = "..."`
+crate-type = ["cdylib"]
+```
+
+[Cargo Target]: https://doc.rust-lang.org/cargo/reference/cargo-targets.html
+
 ## Commands
 
-- `build`: Compiles the current package
-- `run`: Run a binary or example of the local package
-- `gdb`: Start a gdb session attached to an adb device with symbols loaded
+- `build`: Compile the selected crate and package it into an APK
+- `run`: Compile, install and run the selected crate/package on an attached Android device via `adb`
+- `gdb`: Start a gdb session on an attached Android device via `adb`, with symbols loaded
+
+Invoke `cargo apk help` for a more detailed overview of all available commands and their options (`cargo apk run --help` or `cargo apk help run` for example).
+
+### Target selection
+
+Like `cargo`, the above subcommands from `cargo apk` support selecting the target to build and/or run using `--package`/`-p` (which picks the library target inside the crate) or `--example`, as long as the Cargo Target is a `cdylib` as described above.
 
 ## Manifest
 
-`cargo` supports the `metadata` table for configurations for external tools like `cargo apk`.
-Following configuration options are supported by `cargo apk` under `[package.metadata.android]`:
+`cargo apk` reads additional configuration from Cargo's `[package.metadata]` table. The following configuration options are supported by `cargo apk` under `[package.metadata.android]`:
 
 ```toml
 [package.metadata.android]
