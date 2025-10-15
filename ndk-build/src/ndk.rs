@@ -133,7 +133,9 @@ impl Ndk {
                 name.strip_prefix("android-")
                     .and_then(|api| api.parse::<u32>().ok())
             })
-            .filter(|level| (min_platform_level..=max_platform_level).contains(level))
+            // Currently Gecko uses NDK r29 which has a max_platform_level of 35. However, we use
+            // package platform 36 on CI, meaning we need to filter out the platform here.
+            //.filter(|level| (min_platform_level..=max_platform_level).contains(level))
             .collect();
 
         if platforms.is_empty() {
